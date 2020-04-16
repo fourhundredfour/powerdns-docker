@@ -1,0 +1,37 @@
+version: "3"
+services:
+  pdns:
+    image: psitrax/powerdns
+    restart: always
+    ports:
+      - 53:53
+    environment: 
+      MYSQL_USER: root
+      MYSQL_PASS: hoffmanRulez
+      MYSQL_DB: pdns
+    volumes: 
+      - ./pdns/conf:/etc/pdns/conf.d
+    depends_on: 
+      - database
+  database:
+    image: mariadb:10
+    restart: always
+    environment: 
+      MYSQL_ROOT_PASSWORD: hoffmanRulez
+      MYSQL_DATABASE: pdns
+    volumes: 
+      - db:/var/lib/mysql
+  pdns-admin:
+    image: ngoduykhanh/powerdns-admin:latest
+    restart: always
+    ports:
+      - 9191:80
+    environment:
+      - SQLALCHEMY_DATABASE_URI=mysql://pda:root:hoffmanRulez@database/pdns
+      - GUINCORN_TIMEOUT=60
+      - GUNICORN_WORKERS=2
+      - GUNICORN_LOGLEVEL=DEBUG
+    depends_on: 
+      - pdns
+volumes: 
+  db:
